@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haris's Mandarin</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🀄</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <span class="brand-emoji">🀄</span>
+    <div>
+      <h1>Haris's Mandarin</h1>
+      <p class="tagline">Words &amp; sentences straight from Emeely Laoshi's Y6 class</p>
+    </div>
+  </div>
+  <div class="synced" id="syncedNote"></div>
+</header>
+
+<nav class="tabbar" id="tabbar">
+  <button class="tab-btn active" data-tab="home">🏠 Home</button>
+  <button class="tab-btn" data-tab="flashcards">🔤 Recognise</button>
+  <button class="tab-btn" data-tab="write">✍️ Write</button>
+  <button class="tab-btn" data-tab="sentences">📝 Sentences</button>
+</nav>
+
+<main id="app">
+
+  <!-- HOME -->
+  <section class="tab-panel active" id="tab-home">
+    <div class="stats-row" id="statsRow"></div>
+
+    <h2>Units covered so far</h2>
+    <div class="unit-list" id="unitList"></div>
+
+    <div class="note-box">
+      <strong>For grown-ups:</strong> this app only ever uses the words, characters and
+      sentence patterns Emeely Laoshi has actually posted on Seesaw — nothing new is
+      introduced. New lessons get added to <code>data.js</code> as they're posted.
+    </div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section class="tab-panel" id="tab-flashcards">
+    <div class="panel-controls">
+      <label for="fcUnitFilter">Unit:</label>
+      <select id="fcUnitFilter"></select>
+      <label for="fcDirection">Show:</label>
+      <select id="fcDirection">
+        <option value="cn2en">Chinese → English</option>
+        <option value="en2cn">English → Chinese</option>
+      </select>
+    </div>
+
+    <div class="card-scene">
+      <div class="flashcard" id="flashcard">
+        <div class="flashcard-inner" id="flashcardInner">
+          <div class="flashcard-face flashcard-front" id="fcFront"></div>
+          <div class="flashcard-face flashcard-back" id="fcBack"></div>
+        </div>
+      </div>
+    </div>
+    <p class="hint">Tap the card to flip it</p>
+
+    <div class="fc-actions">
+      <button class="btn btn-soft" id="fcStillLearning">Still learning 🙈</button>
+      <button class="btn btn-primary" id="fcGotIt">Got it! ✅</button>
+    </div>
+    <p class="fc-progress" id="fcProgress"></p>
+  </section>
+
+  <!-- WRITE -->
+  <section class="tab-panel" id="tab-write">
+    <div class="panel-controls">
+      <label for="writeUnitFilter">Unit:</label>
+      <select id="writeUnitFilter"></select>
+    </div>
+    <div class="char-picker" id="charPicker"></div>
+
+    <div class="write-stage" id="writeStage">
+      <p class="pinyin-display" id="writePinyin">Pick a character above</p>
+      <div id="hanziTarget" class="hanzi-target"></div>
+      <div class="write-actions">
+        <button class="btn btn-soft" id="btnShowStrokes">Show stroke order</button>
+        <button class="btn btn-primary" id="btnQuizMe">Quiz me ✍️</button>
+      </div>
+      <p class="write-meaning" id="writeMeaning"></p>
+    </div>
+  </section>
+
+  <!-- SENTENCES -->
+  <section class="tab-panel" id="tab-sentences">
+    <div class="panel-controls">
+      <label for="sentUnitFilter">Unit:</label>
+      <select id="sentUnitFilter"></select>
+    </div>
+    <div id="sentenceList" class="sentence-list"></div>
+  </section>
+
+</main>
+
+<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3/dist/hanzi-writer.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
