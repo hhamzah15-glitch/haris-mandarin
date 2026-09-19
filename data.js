@@ -118,8 +118,35 @@ const UNITS = [
         blankWordBank: ["走路", "开车", "坐火车", "坐公共汽车", "坐汽车"]
       }
     ]
+  },
+  {
+    id: "directions-shang-xia-zuo-you",
+    title: "方向 · Directions",
+    source: "Seesaw post, 8 Sep 2026 — Emeely Laoshi",
+    dateAdded: "2026-09-19",
+    vocab: [
+      { word: "上", pinyin: "shàng", meaning: "up" },
+      { word: "下", pinyin: "xià", meaning: "down" },
+      { word: "左", pinyin: "zuǒ", meaning: "left" },
+      { word: "右", pinyin: "yòu", meaning: "right" },
+      { word: "下边", pinyin: "xià bian", meaning: "under / underneath" }
+    ],
+    sentencePatterns: []
+  },
+  {
+    id: "dictation-3-body-unwell",
+    title: "听写三 · Body & Being Unwell",
+    source: "Seesaw post, 18 Sep 2026 — Emeely Laoshi",
+    dateAdded: "2026-09-19",
+    vocab: [
+      { word: "手", pinyin: "shǒu", meaning: "hand" },
+      { word: "脚", pinyin: "jiǎo", meaning: "foot" },
+      { word: "腿", pinyin: "tuǐ", meaning: "leg" },
+      { word: "生病", pinyin: "shēng bìng", meaning: "to fall ill / be sick" }
+    ],
+    sentencePatterns: []
   }
 ];
 
 // Metadata about when this file was last synced from Seesaw.
-const LAST_SYNCED = "2026-09-06";
+const LAST_SYNCED = "2026-09-19";
