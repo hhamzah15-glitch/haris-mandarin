@@ -25,6 +25,7 @@
   <button class="tab-btn" data-tab="flashcards">🔤 Recognise</button>
   <button class="tab-btn" data-tab="write">✍️ Write</button>
   <button class="tab-btn" data-tab="sentences">📝 Sentences</button>
+  <button class="tab-btn" data-tab="dictation">✏️ Dictation</button>
 </nav>
 
 <main id="app">
@@ -98,6 +99,51 @@
       <select id="sentUnitFilter"></select>
     </div>
     <div id="sentenceList" class="sentence-list"></div>
+  </section>
+
+
+  <!-- DICTATION -->
+  <section class="tab-panel" id="tab-dictation">
+
+    <!-- Step 1: choose the words -->
+    <div id="dictSetup">
+      <h2>听写 · Dictation</h2>
+      <p class="dict-intro">
+        Tick the words for this week's list, then choose <strong>Practice</strong> to copy them,
+        or <strong>Quiz</strong> to be tested from the pinyin.
+      </p>
+
+      <div class="dict-picker-tools">
+        <button class="btn btn-soft" id="dictSelectAll">Select all</button>
+        <button class="btn btn-soft" id="dictClearAll">Clear</button>
+        <span class="dict-count" id="dictCount"></span>
+      </div>
+
+      <div class="dict-picker" id="dictPicker"></div>
+
+      <div class="dict-start-row">
+        <button class="btn btn-soft" id="dictStartPractice">Practice ✍️</button>
+        <button class="btn btn-primary" id="dictStartQuiz">Quiz 📝</button>
+      </div>
+    </div>
+
+    <!-- Step 2/3: the working screen -->
+    <div id="dictSession" hidden>
+      <div class="dict-session-bar">
+        <button class="btn btn-soft btn-small" id="dictExit">← Word list</button>
+        <span class="dict-mode-label" id="dictModeLabel"></span>
+        <span class="dict-progress" id="dictProgress"></span>
+      </div>
+
+      <div class="dict-prompt" id="dictPrompt"></div>
+      <div class="dict-grids" id="dictGrids"></div>
+      <div class="dict-reveal" id="dictRevealBox"></div>
+      <div class="dict-actions" id="dictActions"></div>
+    </div>
+
+    <!-- Results -->
+    <div id="dictResults" hidden></div>
+
   </section>
 
 </main>
