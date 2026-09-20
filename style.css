@@ -263,3 +263,259 @@ h2{font-size:1.05rem; margin: 1.4rem 0 0.6rem;}
   .app-header h1{font-size:1.1rem;}
   .hanzi-target{width:220px; height:220px;}
 }
+
+/* ---------- Dictation (听写) ---------- */
+
+#tab-dictation h2{ margin: 0 0 0.3rem; }
+.dict-intro{
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.dict-picker-tools{
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
+  flex-wrap:wrap;
+  margin-bottom: 0.9rem;
+}
+.dict-count{
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-left: auto;
+}
+
+.dict-unit{ margin-bottom: 1.1rem; }
+.dict-unit-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:0.75rem;
+  margin-bottom: 0.45rem;
+}
+.dict-unit-head h3{
+  margin:0;
+  font-size: 0.95rem;
+}
+.dict-unit-all{
+  border:1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.dict-unit-all:hover{ color: var(--red); border-color: var(--red); }
+
+.dict-word-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+.dict-word{
+  display:grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "check hanzi"
+    "check pinyin"
+    "check meaning";
+  align-items:center;
+  gap: 0 0.55rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.6rem 0.7rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.dict-word.on{
+  border-color: var(--red);
+  background: #fff6f4;
+}
+.dict-word input{ grid-area: check; width:18px; height:18px; accent-color: var(--red); }
+.dw-hanzi{ grid-area: hanzi; font-size: 1.25rem; font-weight: 600; line-height:1.25; }
+.dw-pinyin{ grid-area: pinyin; font-size: 0.78rem; color: var(--red); }
+.dw-meaning{ grid-area: meaning; font-size: 0.75rem; color: var(--muted); }
+
+.dict-start-row{
+  display:flex;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+  position: sticky;
+  bottom: 0.6rem;
+}
+.dict-start-row .btn{ flex:1; }
+.btn:disabled{ opacity: 0.45; cursor: not-allowed; }
+
+/* working screen */
+.dict-session-bar{
+  display:flex;
+  align-items:center;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+.btn-small{ padding: 0.4rem 0.7rem; font-size: 0.8rem; }
+.dict-mode-label{
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--red);
+}
+.dict-progress{
+  margin-left:auto;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dict-prompt{
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 1rem;
+  text-align:center;
+  margin-bottom: 1rem;
+}
+.dict-word-big{ font-size: 2.6rem; line-height:1.2; letter-spacing: 0.05em; }
+.dict-prompt .dict-pinyin{ font-size: 1rem; color: var(--red); font-weight: 600; margin-top: 0.3rem; }
+.dict-prompt .dict-pinyin.big{ font-size: 1.7rem; margin-top: 0; }
+.dict-prompt .dict-meaning{ font-size: 0.9rem; color: var(--muted); margin-top: 0.25rem; }
+.dict-hint{
+  display:inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: #f1e9dc;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+.dict-grids{ display:flex; flex-direction:column; gap: 0.7rem; }
+.dict-row{
+  display:flex;
+  align-items:center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+canvas.dict-pad{
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: var(--shadow);
+  touch-action: none;
+  cursor: crosshair;
+  flex: 0 0 auto;
+}
+.dict-row-tools{ display:flex; flex-direction:column; gap: 0.35rem; }
+.pad-btn{
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 0.72rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 8px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.pad-btn:hover{ color: var(--red); border-color: var(--red); }
+
+.dict-reveal:empty{ display:none; }
+.dict-reveal{
+  margin-top: 1rem;
+  text-align:center;
+  background: #fff6f4;
+  border: 1px solid var(--red);
+  border-radius: 14px;
+  padding: 0.8rem;
+}
+.dict-answer-label{
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--red);
+}
+.dict-answer{ font-size: 2.4rem; line-height: 1.2; letter-spacing: 0.05em; margin-top: 0.2rem; }
+
+.dict-actions{
+  display:flex;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+.dict-actions .btn{ flex:1; }
+
+/* results */
+.dict-done{
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 1.4rem 1rem;
+  text-align:center;
+}
+.dict-done h2{ margin: 0.3rem 0 0.2rem; }
+.dict-done-emoji{ font-size: 2.6rem; }
+.dict-done-sub{ color: var(--muted); font-size: 0.9rem; margin: 0.4rem 0 0; }
+.dict-final-score{
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--red);
+  margin-top: 0.2rem;
+}
+.dict-result-list{
+  margin-top: 1rem;
+  text-align:left;
+  display:flex;
+  flex-direction:column;
+  gap: 0.35rem;
+}
+.dict-result-row{
+  display:grid;
+  grid-template-columns: 1.4rem auto 1fr;
+  grid-template-areas:
+    "mark hanzi pinyin"
+    "mark hanzi meaning";
+  align-items:center;
+  gap: 0 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.45rem 0.6rem;
+}
+.dict-result-row.ok{ border-color: var(--green); background: #f4fbf4; }
+.dict-result-row.bad{ border-color: var(--red); background: #fff6f4; }
+.dict-result-mark{ grid-area: mark; font-weight:700; }
+.dict-result-row.ok .dict-result-mark{ color: var(--green); }
+.dict-result-row.bad .dict-result-mark{ color: var(--red); }
+.dict-result-hanzi{ grid-area: hanzi; font-size: 1.25rem; font-weight:600; }
+.dict-result-pinyin{ grid-area: pinyin; font-size: 0.78rem; color: var(--red); align-self:end; }
+.dict-result-meaning{ grid-area: meaning; font-size: 0.75rem; color: var(--muted); align-self:start; }
+.dict-done-actions{
+  display:flex;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+.dict-done-actions .btn{ flex:1; }
+
+/* five tabs need to fit a phone screen */
+@media (max-width: 560px){
+  .tab-btn{
+    min-width: 0;
+    padding: 0.8rem 0.25rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* keep the pad tools beside the grid, never wrapped under it */
+.dict-row{ flex-wrap: nowrap; }
+.dict-row-tools{ flex: 0 0 auto; }
+
+/* the sticky start bar needs a solid backdrop so words don't show through it */
+.dict-start-row{
+  background: var(--paper);
+  padding: 0.7rem 0 0.5rem;
+  margin-left: -0.25rem;
+  margin-right: -0.25rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  box-shadow: 0 -10px 12px -6px var(--paper), 0 -18px 14px -12px var(--paper);
+  z-index: 5;
+}
