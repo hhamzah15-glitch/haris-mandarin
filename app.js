@@ -54,6 +54,373 @@ function buildCharIndex(){
 }
 const CHARS = buildCharIndex();
 
+/* ---------- Rewards / Gamification ---------- */
+/* Gold, puzzle pieces, medals, treasure chests and seasonal Home backgrounds.
+   Purely a motivation layer on top of the real progress tracked above —
+   never changes which words/characters/sentences the app teaches. */
+
+const REWARDS_KEY = "harisMandarin.rewards.v2";
+
+// Shop items are unlocked in this order. Each locked item is a picture puzzle —
+// clearing any tab anywhere in the app earns a piece toward the CURRENT item
+// (the first one not yet owned). Once every piece is in, it becomes purchasable
+// with gold. Themes are global, family-friendly events — nothing Mandarin-specific,
+// so the reward system stays fun even for units that are all-characters.
+const SHOP_ITEMS = [
+  { id: "classic",  name: "Classic Red",          price: 0,  pieces: [] }, // always owned, no puzzle
+  { id: "halloween",name: "Halloween Night",       price: 50, pieces: ["🎃","👻","🦇","🌙","🍬","🕸️"] },
+  { id: "eid",      name: "Eid Celebration",       price: 60, pieces: ["🌙","🕌","⭐","🏮","🎁","🍩"] },
+  { id: "children", name: "World Children's Day",  price: 60, pieces: ["🎈","🌈","🧸","🎠","⭐","🎉"] },
+  { id: "winter",   name: "Winter Holidays",       price: 70, pieces: ["🎄","❄️","🎁","⛄","🔔","🌟"] },
+  { id: "lunarny",  name: "Lunar New Year",        price: 80, pieces: ["🧧","🏮","🐉","🎆","🍊","✨"] }
+];
+
+const MEDALS = [
+  { id: "first-clear",      name: "First Steps",      desc: "Complete any activity for the first time", emoji: "🥉" },
+  { id: "perfect-dictation",name: "Perfect Dictation",desc: "Score 100% in a Dictation quiz of 3+ words", emoji: "🎯" },
+  { id: "bookworm",         name: "Bookworm",         desc: "Master 10 characters in Write",             emoji: "📖" },
+  { id: "wordsmith",        name: "Wordsmith",        desc: "Master 25 characters in Write",             emoji: "🖋️" },
+  { id: "streak-3",         name: "3-Day Streak",     desc: "Practise 3 days in a row",                  emoji: "🔥" },
+  { id: "streak-7",         name: "7-Day Streak",     desc: "Practise 7 days in a row",                  emoji: "🔥" },
+  { id: "streak-30",        name: "30-Day Streak",    desc: "Practise 30 days in a row",                 emoji: "🔥" },
+  { id: "treasure-hunter",  name: "Treasure Hunter",  desc: "Open 5 treasure chests",                    emoji: "🗝️" },
+  { id: "all-rounder",      name: "All-Rounder",      desc: "Fully complete 3 units",                    emoji: "🌟" }
+];
+
+function todayStr(dateObj){
+  const d = dateObj || new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+function defaultRewards(){
+  return {
+    gold: 0,
+    completions: {},        // completions[unitId][tab] = { firstDate, lastDate, times }
+    unitTabsDone: {},       // unitTabsDone[unitId] = { tab: true } — which tabs are cleared per unit
+    unitMedalAwarded: {},   // unitId -> true once fully cleared
+    sentencesChecked: {},   // "unitId|patternIdx" -> true
+    medals: {},             // medalId -> date earned
+    chests: { unopened: 0, openedTotal: 0 },
+    streak: { current: 0, longest: 0, lastActiveDate: null },
+    puzzle: { pieces: 0 },  // pieces collected toward the CURRENT shop item's picture
+    background: { owned: ["classic"], active: "classic" }
+  };
+}
+function loadRewards(){
+  const d = defaultRewards();
+  try{
+    const raw = JSON.parse(localStorage.getItem(REWARDS_KEY));
+    if(!raw || typeof raw !== "object") return d;
+    return {
+      gold: typeof raw.gold === "number" ? raw.gold : 0,
+      completions: raw.completions || {},
+      unitTabsDone: raw.unitTabsDone || {},
+      unitMedalAwarded: raw.unitMedalAwarded || {},
+      sentencesChecked: raw.sentencesChecked || {},
+      medals: raw.medals || {},
+      chests: Object.assign({ unopened: 0, openedTotal: 0 }, raw.chests || {}),
+      streak: Object.assign({ current: 0, longest: 0, lastActiveDate: null }, raw.streak || {}),
+      puzzle: Object.assign({ pieces: 0 }, raw.puzzle || {}),
+      background: Object.assign({ owned: ["classic"], active: "classic" }, raw.background || {})
+    };
+  }catch(e){ return d; }
+}
+function saveRewards(){ try{ localStorage.setItem(REWARDS_KEY, JSON.stringify(rewards)); }catch(e){/* ignore */} }
+let rewards = loadRewards();
+
+function tabLabel(tab){
+  return { recognise: "Recognise", write: "Write", sentences: "Sentences", dictation: "Dictation" }[tab] || tab;
+}
+function tabIcon(tab){
+  return { recognise: "🔤", write: "✍️", sentences: "📝", dictation: "✏️" }[tab] || "•";
+}
+
+// Which of the 4 tabs actually have practisable content for a given unit —
+// some early units have no fill-in-blank sentence pattern, so they only need
+// 3 pieces, not 4.
+function unitApplicableTabs(unit){
+  const tabs = [];
+  if(unit.vocab.length) tabs.push("recognise");
+  if(CHARS.some(c => c.units.includes(unit.id))) tabs.push("write");
+  if(unit.sentencePatterns.some(p => p.blankCount)) tabs.push("sentences");
+  if(unit.vocab.length) tabs.push("dictation");
+  return tabs;
+}
+
+function toastReward(msg, emoji){
+  const el = document.createElement("div");
+  el.className = "reward-toast";
+  el.innerHTML = `<span class="rt-emoji">${emoji || "✨"}</span><span></span>`;
+  el.querySelector("span:last-child").textContent = msg;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("show"));
+  setTimeout(() => {
+    el.classList.remove("show");
+    setTimeout(() => el.remove(), 300);
+  }, 2600);
+}
+
+function addGold(amount, reason){
+  rewards.gold += amount;
+  toastReward(`+${amount} gold — ${reason}`, "🪙");
+  saveRewards();
+}
+
+function awardMedal(id){
+  if(rewards.medals[id]) return;
+  rewards.medals[id] = todayStr();
+  saveRewards();
+  const m = MEDALS.find(x => x.id === id);
+  toastReward(`Medal earned: ${m ? m.name : id}`, m ? m.emoji : "🏅");
+}
+
+function grantChest(){
+  rewards.chests.unopened += 1;
+  saveRewards();
+  toastReward("A treasure chest arrived! Open it on the Home tab.", "🎁");
+}
+
+function bumpStreak(){
+  const today = todayStr();
+  const s = rewards.streak;
+  if(s.lastActiveDate === today) return;
+  const yest = new Date();
+  yest.setDate(yest.getDate() - 1);
+  const yesterday = todayStr(yest);
+  s.current = (s.lastActiveDate === yesterday) ? s.current + 1 : 1;
+  s.lastActiveDate = today;
+  if(s.current > s.longest) s.longest = s.current;
+  saveRewards();
+  [3, 7, 30].forEach(n => { if(s.current === n) awardMedal(`streak-${n}`); });
+  if(s.current > 0 && s.current % 5 === 0) grantChest();
+}
+
+function checkMasteryMedals(){
+  const masteredCount = Object.keys(progress.mastered).filter(c => progress.mastered[c]).length;
+  if(masteredCount >= 10) awardMedal("bookworm");
+  if(masteredCount >= 25) awardMedal("wordsmith");
+}
+
+function markTabDone(unitId, tab){
+  rewards.unitTabsDone[unitId] = rewards.unitTabsDone[unitId] || {};
+  if(rewards.unitTabsDone[unitId][tab]) return;
+  rewards.unitTabsDone[unitId][tab] = true;
+  saveRewards();
+}
+
+// The shop item currently being assembled: the first one (in SHOP_ITEMS order)
+// that isn't owned yet. Pieces only ever go toward this one item at a time —
+// once it's bought, the next locked item becomes the new target.
+function currentShopTarget(){
+  return SHOP_ITEMS.find(it => it.pieces.length && !rewards.background.owned.includes(it.id)) || null;
+}
+
+function awardPuzzlePiece(){
+  const target = currentShopTarget();
+  if(!target) return;
+  if(rewards.puzzle.pieces >= target.pieces.length) return; // full — waiting on purchase
+  rewards.puzzle.pieces += 1;
+  saveRewards();
+  if(rewards.puzzle.pieces >= target.pieces.length){
+    toastReward(`${target.name} picture complete — it's ready to buy in the Shop!`, "🧩");
+  } else {
+    toastReward(`Puzzle piece! ${rewards.puzzle.pieces}/${target.pieces.length} for ${target.name}`, "🧩");
+  }
+}
+
+function checkUnitComplete(unit){
+  if(rewards.unitMedalAwarded[unit.id]) return;
+  const applicable = unitApplicableTabs(unit);
+  const done_ = rewards.unitTabsDone[unit.id] || {};
+  const done = applicable.length > 0 && applicable.every(t => done_[t]);
+  if(!done) return;
+  rewards.unitMedalAwarded[unit.id] = true;
+  rewards.gold += 30;
+  saveRewards();
+  toastReward(`Unit complete: ${unit.title}! +30 gold and a treasure chest 🏆`, "🏆");
+  grantChest();
+  const fullyCleared = UNITS.filter(u => rewards.unitMedalAwarded[u.id]).length;
+  if(fullyCleared >= 3) awardMedal("all-rounder");
+}
+
+// Called whenever a learner finishes a Recognise/Write/Sentences/Dictation
+// activity for a specific unit. Awards a puzzle piece + gold the first time,
+// a smaller gold bonus for practising it again on a later day.
+function recordCompletion(unitId, tab){
+  const unit = UNITS.find(u => u.id === unitId);
+  if(!unit) return;
+  const today = todayStr();
+  rewards.completions[unitId] = rewards.completions[unitId] || {};
+  const rec = rewards.completions[unitId][tab] || { firstDate: null, lastDate: null, times: 0 };
+  const isFirst = !rec.firstDate;
+  const isNewDay = rec.lastDate !== today;
+
+  if(isFirst){
+    rec.firstDate = today;
+    rec.lastDate = today;
+    rec.times = 1;
+    rewards.completions[unitId][tab] = rec;
+    saveRewards();
+    markTabDone(unitId, tab);
+    awardPuzzlePiece();
+    addGold(15, `${tabLabel(tab)} · ${unit.title}`);
+    awardMedal("first-clear");
+    bumpStreak();
+    checkUnitComplete(unit);
+  } else if(isNewDay){
+    rec.lastDate = today;
+    rec.times += 1;
+    rewards.completions[unitId][tab] = rec;
+    saveRewards();
+    addGold(5, `practice bonus · ${tabLabel(tab)}`);
+    bumpStreak();
+  } else {
+    bumpStreak();
+  }
+  renderHome();
+  renderRewardsPanel();
+}
+
+/* ----- Home rewards panel: gold/streak bar, chests, medals, shop ----- */
+
+function renderRewardsPanel(){
+  const bar = document.getElementById("rewardsBar");
+  if(bar){
+    bar.innerHTML = `
+      <div class="reward-pill gold-pill">🪙 <strong>${rewards.gold}</strong>&nbsp;gold</div>
+      <div class="reward-pill streak-pill">🔥 <strong>${rewards.streak.current}</strong>&nbsp;day streak</div>
+    `;
+  }
+  renderChestTray();
+  renderMedalCase();
+  renderShop();
+}
+
+function renderChestTray(){
+  const tray = document.getElementById("chestTray");
+  if(!tray) return;
+  const n = rewards.chests.unopened;
+  if(n <= 0){
+    tray.innerHTML = `<p class="empty-note">No treasure chests right now — clear a tab for a unit to earn one!</p>`;
+    return;
+  }
+  tray.innerHTML = "";
+  for(let i = 0; i < n; i++){
+    const btn = document.createElement("button");
+    btn.className = "chest-btn";
+    btn.innerHTML = `🎁<span>Open</span>`;
+    btn.addEventListener("click", openChest);
+    tray.appendChild(btn);
+  }
+}
+
+function openChest(){
+  if(rewards.chests.unopened <= 0) return;
+  rewards.chests.unopened -= 1;
+  rewards.chests.openedTotal += 1;
+  const amount = 10 + Math.floor(Math.random() * 41); // 10–50 gold
+  rewards.gold += amount;
+  saveRewards();
+  toastReward(`Treasure chest opened: +${amount} gold!`, "🎉");
+  if(rewards.chests.openedTotal >= 5) awardMedal("treasure-hunter");
+  renderRewardsPanel();
+}
+
+function renderMedalCase(){
+  const host = document.getElementById("medalCase");
+  if(!host) return;
+  host.innerHTML = MEDALS.map(m => {
+    const earned = !!rewards.medals[m.id];
+    return `<div class="medal-badge ${earned ? "earned" : "locked"}" title="${m.desc}">
+      <span class="medal-emoji">${earned ? m.emoji : "🔒"}</span>
+      <span class="medal-name">${m.name}</span>
+    </div>`;
+  }).join("");
+}
+
+function renderShop(){
+  const host = document.getElementById("shopGrid");
+  if(!host) return;
+  const target = currentShopTarget();
+
+  host.innerHTML = SHOP_ITEMS.map(bg => {
+    const owned = rewards.background.owned.includes(bg.id);
+    const active = rewards.background.active === bg.id;
+    const isTarget = target && target.id === bg.id;
+    const gotPieces = isTarget ? rewards.puzzle.pieces : (owned ? bg.pieces.length : 0);
+    const puzzleReady = bg.pieces.length > 0 && gotPieces >= bg.pieces.length;
+
+    let puzzleHtml = "";
+    if(bg.pieces.length){
+      puzzleHtml = `<div class="puzzle-grid">
+        ${bg.pieces.map((emoji, i) => {
+          const revealed = owned || (isTarget && i < gotPieces);
+          return `<span class="puzzle-cell ${revealed ? "revealed" : ""}">${revealed ? emoji : "❓"}</span>`;
+        }).join("")}
+      </div>
+      <div class="puzzle-count">${owned ? "Picture complete" : `${gotPieces}/${bg.pieces.length} pieces`}</div>`;
+    }
+
+    let btnHtml;
+    if(active){
+      btnHtml = `<button class="btn btn-soft" disabled>Equipped</button>`;
+    } else if(owned){
+      btnHtml = `<button class="btn btn-soft" data-equip="${bg.id}">Equip</button>`;
+    } else if(!bg.pieces.length || puzzleReady){
+      const afford = rewards.gold >= bg.price;
+      btnHtml = `<button class="btn btn-primary" data-buy="${bg.id}" ${afford ? "" : "disabled"}>Buy · 🪙${bg.price}</button>`;
+    } else if(isTarget){
+      btnHtml = `<button class="btn btn-soft" disabled>Collecting pieces…</button>`;
+    } else {
+      btnHtml = `<button class="btn btn-soft" disabled>🔒 Locked</button>`;
+    }
+
+    return `<div class="shop-item ${owned ? "owned" : ""}">
+      ${puzzleHtml}
+      <div class="shop-name">${bg.name}</div>
+      <div class="shop-price ${bg.price === 0 ? "free" : ""}">${bg.price === 0 ? "Free" : "🪙 " + bg.price}</div>
+      ${btnHtml}
+    </div>`;
+  }).join("");
+
+  host.querySelectorAll("[data-buy]").forEach(btn => {
+    btn.addEventListener("click", () => buyBackground(btn.dataset.buy));
+  });
+  host.querySelectorAll("[data-equip]").forEach(btn => {
+    btn.addEventListener("click", () => equipBackground(btn.dataset.equip));
+  });
+}
+
+function buyBackground(id){
+  const bg = SHOP_ITEMS.find(b => b.id === id);
+  if(!bg || rewards.background.owned.includes(id) || rewards.gold < bg.price) return;
+  const target = currentShopTarget();
+  if(bg.pieces.length && (!target || target.id !== id || rewards.puzzle.pieces < bg.pieces.length)) return;
+  rewards.gold -= bg.price;
+  rewards.background.owned.push(id);
+  rewards.background.active = id;
+  rewards.puzzle.pieces = 0; // reset for the next item's picture
+  saveRewards();
+  applyBackground();
+  toastReward(`${bg.name} unlocked!`, bg.pieces[0] || "🎉");
+  renderRewardsPanel();
+}
+function equipBackground(id){
+  if(!rewards.background.owned.includes(id)) return;
+  rewards.background.active = id;
+  saveRewards();
+  applyBackground();
+  renderRewardsPanel();
+}
+function applyBackground(){
+  const id = rewards.background.active;
+  document.body.className = document.body.className.replace(/\btheme-\S+/g, "").trim();
+  document.body.classList.add("theme-" + id);
+  const bg = SHOP_ITEMS.find(b => b.id === id);
+  const strip = document.getElementById("themeEmojiStrip");
+  if(strip) strip.textContent = (bg && bg.pieces.length) ? bg.pieces.join(" ").repeat(2) : "";
+}
+
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -92,13 +459,27 @@ function renderHome(){
   const list = document.getElementById("unitList");
   list.innerHTML = "";
   UNITS.forEach(unit => {
+    const applicable = unitApplicableTabs(unit);
+    const done = rewards.unitTabsDone[unit.id] || {};
+    const doneCount = applicable.filter(t => done[t]).length;
+    const complete = !!rewards.unitMedalAwarded[unit.id];
+
     const div = document.createElement("div");
-    div.className = "unit-card";
+    div.className = "unit-card" + (complete ? " unit-complete" : "");
     div.innerHTML = `
-      <h3>${unit.title}</h3>
+      <div class="unit-card-head">
+        <h3>${unit.title}</h3>
+        ${complete ? '<span class="unit-medal-badge" title="Unit complete">🏆</span>' : ""}
+      </div>
       <div class="meta">${unit.source}</div>
       <div class="word-chip-row">
         ${unit.vocab.map(v => `<span class="chip">${v.word}</span>`).join("")}
+      </div>
+      <div class="unit-puzzle">
+        <span class="puzzle-label">✅ ${doneCount}/${applicable.length} tabs cleared</span>
+        <span class="puzzle-dots">
+          ${applicable.map(t => `<span class="p-dot ${done[t] ? "done" : ""}" title="${tabLabel(t)}">${tabIcon(t)}</span>`).join("")}
+        </span>
       </div>
     `;
     list.appendChild(div);
@@ -166,6 +547,10 @@ function fcAdvance(markKnown){
     saveProgress(progress);
   }
   fcIndex++;
+  if(fcList.length && fcIndex % fcList.length === 0){
+    const unitId = document.getElementById("fcUnitFilter").value;
+    if(unitId !== "all") recordCompletion(unitId, "recognise");
+  }
   renderFlashcard();
   renderHome();
 }
@@ -250,6 +635,16 @@ document.getElementById("btnQuizMe").addEventListener("click", () => {
       saveProgress(progress);
       renderCharPicker();
       renderHome();
+      checkMasteryMedals();
+      const charEntry = CHARS.find(c => c.char === currentChar);
+      if(charEntry){
+        charEntry.units.forEach(unitId => {
+          const unitChars = CHARS.filter(c => c.units.includes(unitId));
+          if(unitChars.length && unitChars.every(c => progress.mastered[c.char])){
+            recordCompletion(unitId, "write");
+          }
+        });
+      }
     }
   });
 });
@@ -363,6 +758,19 @@ function setupBlankFill(unitId, idx, pattern){
     } else {
       resultEl.textContent = "Nice! That's a real sentence using words Haris has learned. 👏";
       resultEl.className = "check-result ok";
+
+      rewards.sentencesChecked[key] = true;
+      saveRewards();
+      const unit = UNITS.find(u => u.id === unitId);
+      if(unit){
+        const totalBlankPatterns = unit.sentencePatterns.filter(p => p.blankCount).length;
+        const checkedForUnit = unit.sentencePatterns.filter((p, i) =>
+          p.blankCount && rewards.sentencesChecked[`${unitId}|${i}`]
+        ).length;
+        if(totalBlankPatterns && checkedForUnit >= totalBlankPatterns){
+          recordCompletion(unitId, "sentences");
+        }
+      }
     }
   });
 
@@ -382,7 +790,9 @@ function init(){
 
   // Render the tabs that don't depend on the external stroke-data library first,
   // so a slow/broken CDN load never leaves the rest of the app blank.
+  applyBackground();
   renderHome();
+  renderRewardsPanel();
   fcNewSession();
   renderSentences();
 
@@ -798,6 +1208,17 @@ function renderDictResults(){
   const words = dictQueue.slice();
   const wrong = words.filter(w => !dictScore[w]);
   const right = words.length - wrong.length;
+
+  if(right === words.length && words.length){
+    if(words.length >= 3) awardMedal("perfect-dictation");
+    const queueSet = new Set(words);
+    UNITS.forEach(unit => {
+      const unitWords = unit.vocab.map(v => v.word);
+      if(unitWords.length && unitWords.every(w => queueSet.has(w))){
+        recordCompletion(unit.id, "dictation");
+      }
+    });
+  }
 
   const done = document.createElement("div");
   done.className = "dict-done";

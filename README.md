@@ -13,9 +13,36 @@ introduced beyond that.
 - **Write** — stroke-order practice for every character taught, using [Hanzi Writer](https://hanziwriter.org/).
 - **Sentences** — the sentence patterns the teacher has given, plus a drag-and-tap
   "build your own sentence" exercise using only taught vocabulary.
+- **Dictation (听写)** — pick a word list, then Practice (copy the characters) or
+  Quiz (write them from pinyin + meaning alone, self-marked against a reveal).
 
 Progress (known words / mastered characters) is saved in the browser's local storage,
 so it's per-device.
+
+## Rewards
+
+To make regular practice more fun, the app has a lightweight rewards layer — purely
+motivational, it never changes which words/characters are taught:
+
+- **Gold** 🪙 is earned by clearing a tab (Recognise / Write / Sentences / Dictation)
+  for a unit — more the first time, a smaller "practice bonus" for doing it again on
+  a later day. Each unit's card on Home shows a checklist of which tabs are cleared.
+- **Puzzle pieces** 🧩 — clearing any tab anywhere in the app also earns a piece
+  toward the picture of the *next* Shop item (see below). Reveal every piece to make
+  that item purchasable.
+- **Medals** 🏅 — for milestones like a first clear, a perfect Dictation quiz,
+  mastering 10/25 characters, practice streaks, and fully clearing units.
+- **Treasure chests** 🎁 — awarded for fully clearing a unit (all its tabs) and for
+  practice streak milestones (every 5 days). Open them from Home for a random gold bonus.
+- **Streak** 🔥 — counts consecutive days with at least one completed activity.
+- **Shop** 🛍️ — global, family-friendly event themes for the Home-tab background
+  (Halloween Night, Eid Celebration, World Children's Day, Winter Holidays, Lunar New
+  Year), unlocked one at a time: practice reveals the puzzle picture, then gold buys
+  it. Anything bought can be re-equipped for free at any time. To add or change the
+  lineup, edit the `SHOP_ITEMS` array near the top of the Rewards section in `app.js`.
+
+All of this lives in its own `harisMandarin.rewards.v2` local storage key, separate
+from progress — clearing one doesn't affect the other.
 
 ## Keeping it up to date
 
