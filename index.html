@@ -19,6 +19,7 @@
   </div>
   <div class="synced" id="syncedNote"></div>
 </header>
+<div class="theme-emoji-strip" id="themeEmojiStrip"></div>
 
 <nav class="tabbar" id="tabbar">
   <button class="tab-btn active" data-tab="home">🏠 Home</button>
@@ -34,13 +35,27 @@
   <section class="tab-panel active" id="tab-home">
     <div class="stats-row" id="statsRow"></div>
 
+    <div class="rewards-bar" id="rewardsBar"></div>
+
     <h2>Units covered so far</h2>
+    <p class="section-hint">Clear Recognise, Write, Sentences and Dictation for a unit to earn a medal and a treasure chest.</p>
     <div class="unit-list" id="unitList"></div>
+
+    <h2>🎁 Treasure chests</h2>
+    <div class="chest-tray" id="chestTray"></div>
+
+    <h2>🏅 Medals</h2>
+    <div class="medal-case" id="medalCase"></div>
+
+    <h2>🛍️ Shop · Home backgrounds</h2>
+    <p class="section-hint">Clearing any tab anywhere earns a puzzle piece toward the picture below — reveal it all to unlock the item, then spend gold to get it. Anything you own can be re-equipped for free.</p>
+    <div class="shop-grid" id="shopGrid"></div>
 
     <div class="note-box">
       <strong>For grown-ups:</strong> this app only ever uses the words, characters and
       sentence patterns Emeely Laoshi has actually posted on Seesaw — nothing new is
       introduced. New lessons get added to <code>data.js</code> as they're posted.
+      Gold, medals and backgrounds are just for motivation and don't affect the material taught.
     </div>
   </section>
 
