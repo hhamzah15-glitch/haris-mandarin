@@ -145,8 +145,22 @@ const UNITS = [
       { word: "生病", pinyin: "shēng bìng", meaning: "to fall ill / be sick" }
     ],
     sentencePatterns: []
+  },
+  {
+    id: "my-body-reading-practice",
+    title: "我的身体 · My Body (Reading Practice)",
+    source: "Seesaw post, 18 Oct 2026 — Emeely Laoshi",
+    dateAdded: "2026-10-18",
+    vocab: [
+      { word: "身体", pinyin: "shēn tǐ", meaning: "body" },
+      { word: "头", pinyin: "tóu", meaning: "head" },
+      { word: "口", pinyin: "kǒu", meaning: "mouth" },
+      { word: "手", pinyin: "shǒu", meaning: "hand" },
+      { word: "脚", pinyin: "jiǎo", meaning: "foot" }
+    ],
+    sentencePatterns: []
   }
 ];
 
 // Metadata about when this file was last synced from Seesaw.
-const LAST_SYNCED = "2026-09-19";
+const LAST_SYNCED = "2026-10-18";
