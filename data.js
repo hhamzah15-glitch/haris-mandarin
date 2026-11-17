@@ -159,8 +159,22 @@ const UNITS = [
       { word: "脚", pinyin: "jiǎo", meaning: "foot" }
     ],
     sentencePatterns: []
+  },
+  {
+    id: "dictation-3-food-preferences",
+    title: "听写三 · Food & Preferences",
+    source: "Seesaw post, 13 Nov 2026 — Emeely Laoshi",
+    dateAdded: "2026-11-17",
+    vocab: [
+      { word: "喜欢", pinyin: "xǐ huān", meaning: "like" },
+      { word: "水果", pinyin: "shuǐ guǒ", meaning: "fruit" },
+      { word: "快餐", pinyin: "kuài cān", meaning: "fast food" },
+      { word: "吃", pinyin: "chī", meaning: "eat" },
+      { word: "喝", pinyin: "hē", meaning: "drink" }
+    ],
+    sentencePatterns: []
   }
 ];
 
 // Metadata about when this file was last synced from Seesaw.
-const LAST_SYNCED = "2026-10-18";
+const LAST_SYNCED = "2026-11-17";
